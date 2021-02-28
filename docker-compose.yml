@@ -1,0 +1,53 @@
+version: '3.8'
+
+networks:
+  internal:
+    driver: bridge
+
+services:
+    php-httpd:
+        build:
+            context: ./php-httpd
+        ports:
+            - 80:80
+        volumes:
+            - "./DocumentRoot:/app"
+        environment:
+        - PHP_UPLOAD_MAX_FILESIZE=10M
+        - PHP_DEBUGGER="xdebug"
+        - XDEBUG_REMOTE_AUTOSTART=On
+        - XDEBUG_REMOTE_CONNECT_BACK=Off
+        - XDEBUG_REMOTE_HOST=host.docker.internal
+        - XDEBUG_REMOTE_PORT=9090
+        - XDEBUG_PROFILER_ENABLE=Off  
+        - COMPOSER_VERSION=2          
+        networks: 
+            - internal
+            
+    mariadb:
+        image: mariadb:latest
+        volumes:
+            - mariadb-volume:/var/lib/mysql
+        environment:
+            TZ: "America/Sao_Paulo"
+            MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_USER: 'admin'
+            MYSQL_PASSWORD: 'admin'
+            MYSQL_DATABASE: 'appredep_bd'
+        networks: 
+            - internal    
+        ports:
+            - "3306:3306"
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        networks: 
+            - internal
+        links:
+            - 'mariadb:db'
+        ports:
+            - 8081:80        
+
+volumes:
+    mariadb-volume:            
